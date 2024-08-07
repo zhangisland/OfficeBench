@@ -1,5 +1,5 @@
 import fire
-
+from loguru import logger
 DEMO = (
     'You can copy text by calling `copy` with 1 argument.\n'
     '1. text: the text you want to copy.\n'
@@ -8,7 +8,7 @@ DEMO = (
 
 def construct_action(work_dir, args: dict, py_file_path='/apps/system_app/copy.py'):
     # TODO: not sure if we need to specify the file path with the current workdir
-    return f'python3 {py_file_path} --text {args["text"]}'
+    return f'/venv/bin/python3 {py_file_path} --text {args["text"]}'
 
 def copy(text):
     # Store the text into a temporary file as clipboard
@@ -23,7 +23,7 @@ def copy(text):
 def main(text, debug=False):
     success = copy(text)
     if debug:
-        print(text)
+        logger.info(text)
     if not success:
         observation = "Failed to copy the text."
     else:

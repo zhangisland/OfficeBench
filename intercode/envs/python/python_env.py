@@ -1,7 +1,7 @@
 import ast
 import re
 import rpyc
-
+from loguru import logger
 from typing import Dict, Tuple
 
 from intercode.envs.ic_env import (
@@ -33,7 +33,7 @@ class PythonEnv(IntercodeEnv):
                     action = action + "\n" + function_definition
             else:
                 action = self.wrap_with_print(action)
-            self.logger.info(f"Command run: {action}")
+            logger.info(f"Command run: {action}")
             self.observation = self.conn.root.execute(action)
             self.info[ACTION_EXEC] = 'error' in self.observation and len(self.observation['error']) > 0
         except Exception as err:
@@ -49,9 +49,9 @@ class PythonEnv(IntercodeEnv):
         return MAP_DATASET_TO_REWARD[dataset]()
     
     def close(self):
-        self.logger.info("Beginning environment shutdown...")
+        logger.info("Beginning environment shutdown...")
         self.container.stop()
-        self.logger.info("Agent container stopped")
+        logger.info("Agent container stopped")
     
     ############################
     ### MARK: Helper methods ###
@@ -77,7 +77,7 @@ class PythonEnv(IntercodeEnv):
 
         # Wrap the command with "print" if it's not an assignment and does not have a "print" statement
         if not any([has_assignment, has_print, has_import, is_assert]):
-            return f"print({command})"
+            return f"logger.info({command})"
         else:
             return command
     
@@ -127,6 +127,6 @@ class PythonEnv(IntercodeEnv):
         self.info[REWARD] = float(correct) / len(results_pred)
         self.reward = self.info[REWARD]
 
-        self.logger.info(f"Info: {self.info}")
-        self.logger.info(f"Reward: {self.reward}")
+        logger.info(f"Info: {self.info}")
+        logger.info(f"Reward: {self.reward}")
         return self.reward, self.info

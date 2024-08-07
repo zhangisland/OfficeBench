@@ -1,4 +1,6 @@
 import docker, signal, time
+from loguru import logger
+import subprocess
 
 from docker.client import DockerClient
 from docker.models.containers import Container
@@ -7,7 +9,7 @@ TIMEOUT_DURATION = 10
 START_UP_DELAY = 3
 
 
-class timeout:
+class timeout_deprecated:
     def __init__(self, seconds=TIMEOUT_DURATION, error_message='Timeout'):
         self.seconds = seconds
         self.error_message = error_message
@@ -16,6 +18,13 @@ class timeout:
         raise TimeoutError(self.error_message)
     
     def __enter__(self):
+        result = subprocess.run(['uname', '-a'], capture_output=True, text=True)
+
+        logger.debug(f"the operating system is {result.stdout}")
+        # if "win" in result.stdout.lower():
+        #     logger.warning("detected windows operating system, cannot use signal.SIGALRM")
+
+        
         signal.signal(signal.SIGALRM, self.handle_timeout)
         signal.alarm(self.seconds)
 

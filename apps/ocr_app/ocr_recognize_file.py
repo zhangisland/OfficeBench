@@ -2,7 +2,7 @@ import os
 import fire
 import pytesseract
 from PIL import Image
-
+from loguru import logger
 # DEMO = (
 #     'You can recognize an image by calling `ocr_recognize_file` with 1 argument.\n'
 #     '1. file_path: the path to the image file.\n'
@@ -16,7 +16,7 @@ DEMO = (
 
 def construct_action(work_dir, args: dict, py_file_path='/apps/ocr_app/ocr_recognize_file.py'):
     # TODO: not sure if we need to specify the file path with the current workdir
-    return f'python3 {py_file_path} --file_path {args["file_path"]}'
+    return f'/venv/bin/python3 {py_file_path} --file_path {args["file_path"]}'
 
 def ocr_recognize_file(file_path):
     try:
@@ -32,7 +32,7 @@ def main(file_path, debug=False):
     
     text = ocr_recognize_file(file_path)
     if debug:
-        print(text)
+        logger.debug(text)
     if text:
         observation = f'OBSERVATION: The text from {file_path} is:\n{text}'
     else:

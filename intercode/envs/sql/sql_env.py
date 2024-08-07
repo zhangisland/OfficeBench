@@ -11,6 +11,7 @@ from intercode.envs.ic_env import (
     IntercodeEnv,
     AGENT_OBS, EVAL_OBS, CORRUPT_GOLD, ACTION_EXEC, REWARD
 )
+from loguru import logger
 
 SQL_CONFIG = {
     'host': '127.0.0.1',
@@ -102,16 +103,16 @@ class SqlEnv(IntercodeEnv):
         self.info[AGENT_OBS] = str(self.info[AGENT_OBS])
         self.info[EVAL_OBS] = str(self.info[EVAL_OBS])
 
-        self.logger.info(f"Info: {self.info}")
-        self.logger.info(f"Reward: {self.reward}")
+        logger.info(f"Info: {self.info}")
+        logger.info(f"Reward: {self.reward}")
         return self.reward, self.info
 
     def close(self):
-        self.logger.info("Beginning environment shutdown...")
+        logger.info("Beginning environment shutdown...")
         self.cur.close()
         self.cnx.close()
         self.container.stop()
-        self.logger.info("Agent, evaluation containers stopped")
+        logger.info("Agent, evaluation containers stopped")
     
     ############################
     ### MARK: Helper methods ###

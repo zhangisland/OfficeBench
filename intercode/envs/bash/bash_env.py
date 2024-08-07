@@ -1,5 +1,6 @@
 import math
-
+from loguru import logger
+from timeout_decorator import timeout, TimeoutError
 from sklearn.feature_extraction.text import TfidfVectorizer
 from typing import Dict, List, Tuple
 
@@ -7,7 +8,7 @@ from intercode.envs.ic_env import (
     IntercodeEnv,
     AGENT_OBS, EVAL_OBS, CORRUPT_GOLD, ACTION_EXEC, REWARD
 )
-from intercode.utils import get_container, timeout
+from intercode.utils import get_container  #, timeout
 
 GIT_RESET_SCRIPT = "git reset --hard; git clean -fd;"
 GIT_STATUS_SCRIPT = "git status --short;"
@@ -36,6 +37,14 @@ class BashEnv(IntercodeEnv):
         if exit_code != 0:
             raise RuntimeError(f"Failed to reset `{self.container_name}` container successfully: {output}")
     
+    # @timeout(10, use_signals=False)
+    def exec_container_action(self, action, is_cd_flag):
+        exit_code, output = self.container.exec_run(
+                    self.clean_cmd(action),
+                    workdir="/" if is_cd_flag else self.workdir)
+        self.observation = output.decode("utf-8")
+        self.info[ACTION_EXEC] = exit_code == 0
+
     def exec_action(self, action: str) -> None:
         """Executes action in bash shell"""
         is_cd_flag = action.startswith("cd")
@@ -45,12 +54,7 @@ class BashEnv(IntercodeEnv):
             action = f"cd {new_path}"
         
         try:
-            with timeout():
-                exit_code, output = self.container.exec_run(
-                    self.clean_cmd(action),
-                    workdir="/" if is_cd_flag else self.workdir)
-                self.observation = output.decode("utf-8")
-                self.info[ACTION_EXEC] = exit_code == 0
+            self.exec_container_action(action, is_cd_flag)
         except TimeoutError:
             self.observation = f"Command timed out"
             self.info[ACTION_EXEC] = False
@@ -138,15 +142,15 @@ class BashEnv(IntercodeEnv):
         self.reward = reward 
         self.info.update(info)
 
-        self.logger.info(f"Info: {self.info}")
-        self.logger.info(f"Reward: {self.reward}")
+        logger.info(f"Info: {self.info}")
+        logger.info(f"Reward: {self.reward}")
         return reward, info
 
     def close(self):
-        self.logger.info("Beginning environment shutdown...")
+        logger.info("Beginning environment shutdown...")
         self.container.stop()
         self.container_eval.stop()
-        self.logger.info("Agent, evaluation containers stopped")
+        logger.info("Agent, evaluation containers stopped")
     
     ############################
     ### MARK: Helper methods ###

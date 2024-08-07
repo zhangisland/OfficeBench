@@ -1,4 +1,5 @@
 import os
+from loguru import logger
 import icalendar
 import difflib
 import sys
@@ -54,7 +55,7 @@ def evaluate_contain(testbed_dir, args):
     
     file_path = os.path.join(testbed_dir, args['file'])
     if not os.path.exists(file_path) or not os.path.isfile(file_path):
-        print('!!! File not exist:', file_path)
+        logger.error(f'!!! File not exist:{file_path}')
         return False
     if type == 'xlsx':
         helper = excel_read_file.excel_read_file
@@ -119,7 +120,7 @@ def evaluate_diff_contain_text(testbed_dir, args):
 def evaluate_excel_cell_value(testbed_dir, args):
     file_path = os.path.join(testbed_dir, args['file'])
     if not os.path.exists(file_path):
-        print('!!! File not exist:', file_path)
+        logger.error(f'!!! File not exist: {file_path}', )
         return False
     content = excel_read_file.excel_read_file(file_path)
     # Match the '(row, col): value' format
@@ -158,7 +159,7 @@ def evaluate_calendar_no_overlap(testbed_dir, args):
     # sort events by start time
 
     for x in calendar.subcomponents:
-        print(x.get('dtstart').dt)
+        logger.info(x.get('dtstart').dt)
 
     utc=pytz.UTC
     def is_naive(dt):
@@ -178,14 +179,14 @@ def evaluate_calendar_no_overlap(testbed_dir, args):
         if proc_dt(events[i].get('dtend').dt) > proc_dt(events[i+1].get('dtstart').dt):
             event_i_summary = events[i].get('summary')
             event_j_summary = events[i+1].get('summary')
-            print(f'Calendar of {username}: Event {event_i_summary} and Event {event_j_summary} overlap')
+            logger.info(f'Calendar of {username}: Event {event_i_summary} and Event {event_j_summary} overlap')
             return False
     return True
 
 def evaluate_exact_match(testbed_dir, args):
     result_path = os.path.join(testbed_dir, args['result_file'])
     if not os.path.exists(result_path):
-        print('!!! File not exist:', result_path)
+        logger.error(f'!!! File not exist:{result_path}')
         return False
 
     expected_path = os.path.join(testbed_dir, args['expected_file'])
@@ -202,9 +203,9 @@ def evaluate_exact_match(testbed_dir, args):
         result_content = helper(result_path)
         expected_content = helper(expected_path)
         if result_content != expected_content:
-            print('!!! Content not match')
-            print('result:', result_content)
-            print('expected:', expected_content)
+            logger.error('!!! Content not match')
+            logger.error(f'result: {result_content}')
+            logger.error(f'expected: {expected_content}')
             return False
         return True
     else:
@@ -253,4 +254,4 @@ if __name__ == '__main__':
     def comparator(x):
         # check whether x is a number string
         return x.isdigit() == True and int(x) == 100
-    print(evaluate_excel_cell_comparator('/home/zilong-exp/Projects/OfficeBench/OfficeAgentBench/tasks/1-4/testbed/data', {'output_file':'score_1.xlsx', 'matches':[{'row': 12, 'col': 2, 'comparator': comparator}]}))
+    logger.info(evaluate_excel_cell_comparator('/home/zilong-exp/Projects/OfficeBench/OfficeAgentBench/tasks/1-4/testbed/data', {'output_file':'score_1.xlsx', 'matches':[{'row': 12, 'col': 2, 'comparator': comparator}]}))

@@ -1,5 +1,5 @@
 import os
-
+from loguru import logger
 from intercode.envs import (
   BashEnv, IntercodeEnv, AGENT_OBS, REWARD
 )
@@ -20,7 +20,7 @@ class SWEEnv(BashEnv):
         # Clone repository if not already cloned
         repo_name = self.record['repo'].replace("/", "__")
         if repo_name not in folders:
-            self.logger.info(f"{repo_name} not found in container, cloning...")
+            logger.info(f"{repo_name} not found in container, cloning...")
             clone_cmd = f"git clone https://{self.token}@github.com/swe-bench/{repo_name}.git"
             self.container.exec_run(self.clean_cmd(clone_cmd))
         
@@ -43,6 +43,6 @@ class SWEEnv(BashEnv):
         return 0, {}
     
     def close(self):
-        self.logger.info("Beginning environment shutdown...")
+        logger.info("Beginning environment shutdown...")
         self.container.stop()
-        self.logger.info("Agent container stopped")
+        logger.info("Agent container stopped")

@@ -9,7 +9,7 @@ DEMO = (
 
 def construct_action(work_dir, args: dict, py_file_path='/apps/excel_app/excel_convert_to_pdf.py'):
     # TODO: not sure if we need to specify the file path with the current workdir
-    return f'python3 {py_file_path} --excel_file_path {args["excel_file_path"]} --pdf_file_path {args["pdf_file_path"]}'
+    return f'/venv/bin/python3 {py_file_path} --excel_file_path {args["excel_file_path"]} --pdf_file_path {args["pdf_file_path"]}'
 
     
 def linux_doc2pdf(excel_file_path, pdf_file_path):

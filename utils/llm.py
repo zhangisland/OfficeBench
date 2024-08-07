@@ -1,8 +1,10 @@
+from http import HTTPStatus
 from openai import OpenAI
 import time
 import numpy as np
 import google.generativeai as genai
-
+from loguru import logger
+import dashscope
 
 class ChatGPT:
     def __init__(self, model_name, key, system_message=None):
@@ -57,10 +59,10 @@ class ChatGPT:
                 )
                 error = None
             except Exception as e:
-                print(str(e), flush=True)
+                logger.error(str(e))
                 error = str(e)
                 if "This model's maximum context length is" in str(e):
-                    print(e, flush=True)
+                    logger.error(e, flush=True)
                     gpt_responses = {
                         "choices": [{"message": {"content": "PLACEHOLDER"}}]
                     }
@@ -153,5 +155,49 @@ class vLLM:
             )
             return completion.choices[0].message.content
         except Exception as e:
-            print("Generation Error:", e)
+            logger.error(f"Generation Error: {e}")
             return "None"
+
+
+class Qwen:
+    def __init__(self, model_name, key, system_message=None):
+        self.model_name = model_name
+        self.key = key
+        self.system_message = system_message
+    
+    def generate_model_options(self,
+                               temperature=0.2):
+        return dict(
+            temperature=temperature,
+        )
+
+    def generate(self, prompt, options=None):
+        messages = [
+            {
+                "role": "system",
+                "content": ("You are a helpful assistant." if self.system_message is None else self.system_message)
+            },
+            {"role": "user", "content": prompt},
+        ]
+
+        if options is None:
+            options = self.generate_model_options()  # default options
+
+        response = dashscope.Generation.call(
+            model=self.model_name,
+            seed=1234,  # default seed
+            api_key=self.key,
+            messages=messages,
+            result_format='message',
+            **options,
+        )
+        if response.status_code == HTTPStatus.OK:
+            result = response.output.choices[0].message.content
+
+        else:
+            logger.error(f'Request id: {response.request_id}, \
+                           Status code: {response.status_code}, \
+                           error code: {response.code}, \
+                           error message: {response.message}')
+            result = "Request failed. Please try again later."
+        return result

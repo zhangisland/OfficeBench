@@ -1,10 +1,10 @@
 import json
 import apps
 
-from utils.llm import ChatGPT, Gemini, vLLM
+from utils.llm import ChatGPT, Gemini, vLLM, Qwen
 
-import logging
 
+from loguru import logger
 
 class BasePolicy:
     def __init__(self):
@@ -62,6 +62,8 @@ class LLMPolicy(BasePolicy):
             self.llm = ChatGPT(model_name, key, self.system_message)
         elif 'gemini' in model_name:
             self.llm = Gemini(model_name, key, self.system_message)
+        elif 'qwen' in model_name:
+            self.llm = Qwen(model_name, key, self.system_message)
         else:
             self.llm = vLLM(model_name, self.system_message)
             
@@ -72,7 +74,7 @@ class LLMPolicy(BasePolicy):
 
         self.llm_cache = llm_cache
 
-        self.logger = logging.getLogger(__name__)
+        
 
         self.debug_mode = debug_mode
 
@@ -112,23 +114,22 @@ class LLMPolicy(BasePolicy):
         prompt = self.build_prompt(env)
         if self.llm_cache:
             if prompt in self.llm_cache:
-                print('!!!')
-                print('LLM Cache Hit!')
-                print('!!!')
+                logger.info('LLM Cache Hit!')
                 response = self.llm_cache[prompt]
             else:
                 response = self.llm.generate(prompt)
         else:
+            logger.warning('LLM Cache Miss! Generating response...')
             response = self.llm.generate(prompt)
 
         self.llm_history.append((self.system_message, prompt, response))
 
         if self.debug_mode:
-            print('\n\n' + '>'*20)
-            print(f'System: {self.system_message}')
-            print(f'Prompt: {prompt}')
-            print(f'Response: {response}')
-            print('<'*20 + '\n\n')
+            logger.debug(f'{">"*20}')
+            logger.debug(f'System: {self.system_message}')
+            logger.debug(f'Prompt: {prompt}')
+            logger.debug(f'Response: {response}')
+            logger.debug(f'{"<"*20}\n\n')
 
         action = self.proc_action(response)
         if action == '':
@@ -137,7 +138,7 @@ class LLMPolicy(BasePolicy):
         self.action_window.append(action)
         self.action_window = self.action_window[-self.action_window_size:]
         if len(self.action_window) >= self.action_window_size and all([action == self.action_window[0] for action in self.action_window]):
-            self.logger.warning(f"LLM Policy: Action stuck in the action window: {action}")
+            logger.warning(f"LLM Policy: Action stuck in the action window: {action}")
             action = repr({'app': 'system', 'action': 'got_stuck'})   
 
         return action

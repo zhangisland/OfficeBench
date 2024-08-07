@@ -3,7 +3,7 @@ import fire
 import sys
 from icalendar import Calendar, Event
 from datetime import datetime
-
+from loguru import logger
 
 DEMO = (
     "create a new event to a user's calendar where the time format is '%Y-%m-%d %H:%M:%S':"
@@ -15,7 +15,7 @@ def construct_action(word_dir, args: dict, py_file_path='/apps/calendar_app/cale
     # return f'python3 {py_file_path} --user {args["user"]} --summary "{args["summary"]}" --time_start "{args["time_start"]}" --time_end "{args["time_end"]}"'
     if isinstance(args["user"], list):
         args["user"] = 'Multiple users'
-    return "python3 {} --user '''{}''' --summary '{}' --time_start '{}' --time_end '{}'".format(
+    return "/venv/bin/python3 {} --user '''{}''' --summary '{}' --time_start '{}' --time_end '{}'".format(
         py_file_path, args["user"], args["summary"], args["time_start"], args["time_end"]
     )
 
@@ -45,7 +45,7 @@ def create_event(user, summary, time_start, time_end):
             f.write(calendar.to_ical())
         return True
     except Exception as e:
-        print('!!!', e)
+        logger.error(f'!!! {e}')
         return False
 
 

@@ -1,7 +1,7 @@
 import os
 import fire
 from email.message import EmailMessage
-
+from loguru import logger
 DEMO = (
     "Send an email to a recipient: "
     "{'app': 'email', 'action': 'send_email', 'sender': [SENDER], 'recipient': [RECIPIENT], 'subject': [SUBJECT], 'content': [CONTENT]}"
@@ -10,7 +10,7 @@ DEMO = (
 def construct_action(word_dir, args: dict, py_file_path='/apps/email_app/email_send_email.py'):
     if isinstance(args["recipient"], list):
         args["recipient"] = 'Multiple recipients'
-    return """python3 {} --sender {} --recipient '''{}''' --subject '''{}''' --content '''{}''' """.format(
+    return """/venv/bin/python3 {} --sender {} --recipient '''{}''' --subject '''{}''' --content '''{}''' """.format(
         py_file_path,
         args["sender"],
         args["recipient"],
@@ -43,7 +43,7 @@ def send_email(sender, recipient, subject, content):
             f.write(email.as_string())    
         return f'Successfully sent email to {recipient}.'
     except Exception as e:
-        print('!!!', e)
+        logger.error(f'!!! {e}')
         return 'Error: Failed to send email.'
 
 def main(sender, recipient, subject, content):

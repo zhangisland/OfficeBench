@@ -17,3 +17,6 @@ rich
 docker
 mysql-connector-python
 rpyc
+
+timeout_decorator  # to replace the `signal` module, which is not available on Windows
+dashscope  # for Qwen

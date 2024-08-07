@@ -17,7 +17,7 @@ DEMO = (
 
 def construct_action(work_dir, args: dict, py_file_path='/apps/pdf_app/pdf_convert_to_word.py'):
     # TODO: not sure if we need to specify the file path with the current workdir
-    return f'python3 {py_file_path} --pdf_file_path {args["pdf_file_path"]} --word_file_path {args["word_file_path"]}'
+    return f'/venv/bin/python3 {py_file_path} --pdf_file_path {args["pdf_file_path"]} --word_file_path {args["word_file_path"]}'
 
 
 def pdf_convert_to_word(pdf_file_path, word_file_path):

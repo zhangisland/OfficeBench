@@ -1,7 +1,13 @@
 #!/bin/bash
 
+echo "Starting setup..."
+
 cd /
 
 # install dependencies
-python3 -m pip install --upgrade pip
-python3 -m pip install -r requirements.txt
+echo "updating pip..."
+/venv/bin/pip install --upgrade pip
+
+echo "Installing dependencies..."
+/venv/bin/pip install -r /requirements.txt
+

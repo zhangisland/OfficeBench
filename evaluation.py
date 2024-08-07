@@ -13,9 +13,11 @@ from utils.evaluate import (
     evaluate_exact_match,
     evaluate_calendar_no_overlap
 )
+from loguru import logger
+
 
 def evaluate_output(task_id, subtask_id, output_dir):
-    print(f"Evaluating {task_id} {subtask_id} {output_dir}...")
+    logger.info(f"Evaluating {task_id} {subtask_id} {output_dir}...")
     config_path = f"./tasks/{task_id}/subtasks/{subtask_id}.json"
     config = json.load(open(config_path))
     eval_config = config['evaluation']
@@ -23,7 +25,7 @@ def evaluate_output(task_id, subtask_id, output_dir):
         function = eval_item['function']
         args = eval_item['args']
         if not eval(f"{function}(output_dir, args)"):
-            print(f"Failed: {function} {args}")
+            logger.info(f"Failed: {function} {args}")
             return False
     return True
 
@@ -56,35 +58,35 @@ def main(model_name='gpt-4o-2024-05-13', tag_name='test', result_dir='./results'
         # ./tasks/3-42/outputs/0/gemini-1.5-pro_jun11-gemini/testbed/
         result_testbed_dir = f"./tasks/{task_id}/{output_subdir}/{subtask_id}/{model_name.replace("/", "_")}_{tag_name}/testbed"
         if os.path.exists(result_testbed_dir):
-            print(f"Found {result_testbed_dir}")
+            logger.info(f"Found {result_testbed_dir}")
             try:
                 is_pass = evaluate_output(task_id, subtask_id, result_testbed_dir)
             except Exception as e:
                 is_pass = False
-                print(f"!!! Error: {e}")
+                logger.info(f"!!! Error: {e}")
         else:
-            print(f"Not Found {result_testbed_dir}")
+            logger.info(f"Not Found {result_testbed_dir}")
             unfound_result_cases.append((task_id, subtask_id))
             is_pass = False
-        print(f"task_id: {task_id}, subtask_id: {subtask_id}, is_pass: {is_pass}")
+        logger.info(f"task_id: {task_id}, subtask_id: {subtask_id}, is_pass: {is_pass}")
         f_result.write(json.dumps({"task_id": task_id, "subtask_id": subtask_id, "is_pass": is_pass}) + '\n')
         results_dict[num_app_tag].append(1 if is_pass else 0)
-        print("====================================")
+        logger.info("====================================")
 
     f_result.close()
 
     # print results
-    print(model_name, tag_name)
+    logger.info(model_name, tag_name)
     for num_app_tag in results_dict:
         results = results_dict[num_app_tag]
-        print(f"Num_App_Tag {num_app_tag}: {sum(results)}/{len(results)}={sum(results)/len(results)*100:.3f}%")
+        logger.info(f"Num_App_Tag {num_app_tag}: {sum(results)}/{len(results)}={sum(results)/len(results)*100:.3f}%")
     overall_results = results_dict['1'] + results_dict['2'] + results_dict['3']
-    print(f"Overall: {sum(overall_results)}/{len(overall_results)}={sum(overall_results)/len(overall_results)*100:.3f}%")
-    print("====================================")
-    print(f"Unfound result cases:")
+    logger.info(f"Overall: {sum(overall_results)}/{len(overall_results)}={sum(overall_results)/len(overall_results)*100:.3f}%")
+    logger.info("====================================")
+    logger.info(f"Unfound result cases:")
     for task_id, subtask_id in sorted(unfound_result_cases, key=lambda x: tuple(map(int, x[0].split('-'))) + (int(subtask_id),)):
-        print(f"{task_id} {subtask_id}")
-    print('Total unfound result cases:', len(unfound_result_cases))
+        logger.info(f"{task_id} {subtask_id}")
+    logger.info('Total unfound result cases:', len(unfound_result_cases))
 
 if __name__ == '__main__':
     fire.Fire(main)

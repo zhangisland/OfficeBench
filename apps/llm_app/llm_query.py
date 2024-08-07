@@ -2,8 +2,9 @@ import fire
 import openai
 import time
 
+from utils.llm import Gemini
 
-class ChatGPT:
+class ChatGPT_deprecated:
     def __init__(self, model_name, key, system_message=None):
         self.model_name = model_name
         self.key = key
@@ -78,28 +79,40 @@ def construct_action(
     word_dir, args: dict, py_file_path="/apps/llm_app/llm_query.py"
 ):
     # return f'python3 {py_file_path} --prompt "{args["prompt"]}" '
-    return "python3 {} --prompt '''{}'''".format(py_file_path, args["prompt"])
+    return "/venv/bin/python3 {} --prompt '''{}'''".format(py_file_path, args["prompt"])
 
+
+# def query(prompt):
+#     """
+#     Query an LLM model for an answer to a given prompt.
+#     """
+#     try:
+#         model_name = "gpt-3.5-turbo-0125"
+#         key = open("/openai_key.txt").read().strip()
+#         llm = ChatGPT(model_name, key)
+#         options = llm.get_model_options(
+#             temperature=0,
+#             per_example_max_decode_steps=50,
+#             per_example_top_p=1,
+#             n_sample=1,
+#         )
+#         response = llm.generate(prompt, options)
+#         return response
+#     except Exception as e:
+#         return f"Error: {e}"
 
 def query(prompt):
     """
     Query an LLM model for an answer to a given prompt.
     """
     try:
-        model_name = "gpt-3.5-turbo-0125"
-        key = open("/openai_key.txt").read().strip()
-        llm = ChatGPT(model_name, key)
-        options = llm.get_model_options(
-            temperature=0,
-            per_example_max_decode_steps=50,
-            per_example_top_p=1,
-            n_sample=1,
-        )
-        response = llm.generate(prompt, options)
+        model_name = "gemini-1.5-flash"
+        key = open("/gemini_key.txt").read().strip()
+        llm = Gemini(model_name, key)
+        response = llm.generate(prompt)
         return response
     except Exception as e:
         return f"Error: {e}"
-
 
 def main(prompt):
     response = query(prompt)

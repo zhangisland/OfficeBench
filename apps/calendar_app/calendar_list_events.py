@@ -10,7 +10,7 @@ DEMO = (
 def construct_action(word_dir, args: dict, py_file_path='/apps/calendar_app/calendar_list_events.py'):
     if isinstance(args["username"], list):
         args["username"] = 'Multiple users'
-    return "python3 {} --username '''{}'''".format(py_file_path, args["username"])
+    return "/venv/bin/python3 {} --username '''{}'''".format(py_file_path, args["username"])
 
 def format_time(obj):
     if obj:

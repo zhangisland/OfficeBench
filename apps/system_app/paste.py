@@ -1,5 +1,5 @@
 import fire
-
+from loguru import logger
 DEMO = (
     'You can paste text that previous get copied to the clipboard by calling `paste` with 0 argument.\n'
     "You can call it by generating command: {'app': 'system', 'action': 'paste'}"
@@ -7,7 +7,7 @@ DEMO = (
 
 def construct_action(work_dir, args: dict, py_file_path='/apps/system_app/paste.py'):
     # TODO: not sure if we need to specify the file path with the current workdir
-    return f'python3 {py_file_path} --text {args["text"]}'
+    return f'/venv/bin/python3 {py_file_path} --text {args["text"]}'
 
 def paste():
     # Store the text into a temporary file as clipboard
@@ -22,7 +22,7 @@ def paste():
 def main(text, debug=False):
     text = paste()
     if debug:
-        print(text)
+        logger.info(text)
     if text is None:
         observation = "Failed to paste."
     else:

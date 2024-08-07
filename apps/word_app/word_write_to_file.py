@@ -22,7 +22,7 @@ def construct_action(work_dir, args: dict, py_file_path='/apps/word_app/word_wri
     # TODO: not sure if we need to specify the file path with the current workdir
     # return f'python3 {py_file_path} --file_path {args["file_path"]} --contents "{args["contents"]}"'
     comments = args['contents'].replace("'", "").replace('"', '')
-    return "python3 {} --file_path {} --contents '''{}''' ".format(py_file_path, args['file_path'], comments)
+    return "/venv/bin/python3 {} --file_path {} --contents '''{}''' ".format(py_file_path, args['file_path'], comments)
 
 
 

@@ -1,7 +1,7 @@
 import os
 import fire
 from PyPDF2 import PdfReader 
-
+from loguru import logger
 # DEMO = (
 #     'You can read a pdf file by calling `pdf_read_file` with 1 argument.\n'
 #     '1. The path to the pdf file: pdf_file_path: str\n'
@@ -15,7 +15,7 @@ DEMO = (
 
 def construct_action(work_dir, args: dict, py_file_path='/apps/pdf_app/pdf_read_file.py'):
     # TODO: not sure if we need to specify the file path with the current workdir
-    return f'python3 {py_file_path} --pdf_file_path {args["pdf_file_path"]}'
+    return f'/venv/bin/python3 {py_file_path} --pdf_file_path {args["pdf_file_path"]}'
 
 
 def read_pdf(pdf_file_path):
@@ -33,7 +33,7 @@ def read_pdf_to_string(pdf_file_path):
     return text
 
 def wrap(pages):
-    print(f"number of pages: {len(pages)}") 
+    logger.info(f"number of pages: {len(pages)}") 
   
     text = ""
     # getting a specific page from the pdf file
@@ -50,7 +50,7 @@ def main(pdf_file_path, debug=False):
         return f"OBSERVATION: The pdf file {pdf_file_path} does not exist. Failed to read the file."
     pages = read_pdf(pdf_file_path)
     if debug:
-        print(pages)
+        logger.info(pages)
     return 'OBSERVATION: ' + wrap(pages)
 
 if __name__ == '__main__':

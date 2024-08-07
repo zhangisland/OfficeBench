@@ -5,6 +5,7 @@ __pycache__
 *.log
 openai_key.txt
 gemini_key.txt
+qwen_key.txt
 outputs*/
 cache/
 results/

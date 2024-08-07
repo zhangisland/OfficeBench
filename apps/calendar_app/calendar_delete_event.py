@@ -12,7 +12,7 @@ DEMO = (
 
 
 def construct_action(word_dir, args: dict, py_file_path='/apps/calendar_app/calendar_delete_event.py'):
-    return f'python3 {py_file_path} --user {args["user"]} --summary "{args["summary"]}"'
+    return f'/venv/bin/python3 {py_file_path} --user {args["user"]} --summary "{args["summary"]}"'
 
 
 def delete_event(user, summary):

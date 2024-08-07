@@ -2,14 +2,14 @@ import os
 import fire
 from email import policy
 from email.parser import BytesParser
-
+from loguru import logger
 DEMO = (
     "Read a user's email by the given Email ID: "
     "{'app': 'email', 'action': 'read_email', 'username': [USERNAME], 'email_id': [EMAIL_ID]}"
 )
 
 def construct_action(word_dir, args: dict, py_file_path='/apps/email_app/email_read_email.py'):
-    return "python3 {} --email_id '''{}''' --username '''{}'''".format(
+    return "/venv/bin/python3 {} --email_id '''{}''' --username '''{}'''".format(
         py_file_path,
         args["email_id"],
         args["username"],
@@ -47,7 +47,7 @@ def read_email(username, email_id):
         message += f'Content: {get_email_content(email) + "..."}\n'
         return message
     except Exception as e:
-        print('!!!', e)
+        logger.error(f'!!! {e}')
         return 'Error: Failed to read email.'
 
 

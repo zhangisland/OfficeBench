@@ -2,7 +2,7 @@ import json
 import math
 import os
 import subprocess
-
+from timeout_decorator import timeout, TimeoutError
 from sklearn.feature_extraction.text import TfidfVectorizer
 from typing import Dict, List, Tuple
 
@@ -10,9 +10,9 @@ from intercode.envs.ic_env import (
     IntercodeEnv,
     AGENT_OBS, EVAL_OBS, CORRUPT_GOLD, ACTION_EXEC, REWARD
 )
-from intercode.utils import get_container, timeout
+from intercode.utils import get_container  #, timeout
 
-import logging
+from loguru import logger
 
 # In the future, all of these functions should be imported from a single file
 import apps
@@ -33,7 +33,7 @@ class OfficeAgentEnv(IntercodeEnv):
         self.available_apps = apps.AVAILABLE_APPS
         self.history = []
 
-        self.logger = logging.getLogger(__name__)
+        
 
     def prepare_docker_env(self, testbed_dir, app_dir):
         self._prepare_docker_testbed(testbed_dir)
@@ -54,9 +54,11 @@ class OfficeAgentEnv(IntercodeEnv):
         command = [
             'docker', 'cp', f'{app_dir}', f'{self.container_name}:/'
         ]
+        logger.info(f"Preparing apps in container: {self.container_name}")
         result = subprocess.run(command, capture_output=True, text=True)
         assert result.returncode == 0, f"Prepare Apps: Failed to copy apps to container: {result.stderr}"
-
+        logger.info(f"Done preparing apps in container: {self.container_name}")
+        
     def cache_docker_status(self, local_cache_dir, remote_cache_dir="/testbed"):
         os.makedirs(local_cache_dir, exist_ok=True)
         command = [
@@ -76,7 +78,7 @@ class OfficeAgentEnv(IntercodeEnv):
             'docker', 'exec', self.container_name, 'bash', '-c', "echo '{}' > {}".format(answer, file_path)
         ]
         result = subprocess.run(command, capture_output=True, text=True)
-        # print('WRITE ANSWER COMMAND:', result)
+        # logger.info(f'WRITE ANSWER COMMAND:{result}')
         assert result.returncode == 0, f"Write Answer: Failed to write answer to container: {result.stderr}"
 
 
@@ -87,9 +89,11 @@ class OfficeAgentEnv(IntercodeEnv):
 
     def reset_container(self) -> None:
         self.workdir = "/"
-        exit_code, output = self.container.exec_run(self.clean_cmd(GIT_RESET_SCRIPT))
-        if exit_code != 0:
-            raise RuntimeError(f"Failed to reset `{self.ctr_name_eval}` container successfully: {output}")
+        # cmd = self.clean_cmd(GIT_RESET_SCRIPT)
+        # exit_code, output = self.container.exec_run(cmd)
+
+        # if exit_code != 0:
+        #     raise RuntimeError(f"Failed to reset `{self.ctr_name_eval}` container successfully: {output}")
 
     def check_valid_action(self, action: dict) -> bool:
         """Checks if action is valid"""
@@ -107,6 +111,26 @@ class OfficeAgentEnv(IntercodeEnv):
             else:
                 proc_action[k] = v
         return proc_action
+    
+    # @timeout(10, use_signals=False, exception_message="Timeout: Command execution timed out")
+    def exec_cmd(self, command):
+        cleaned_cmd = self.clean_cmd(command)
+        logger.info(f"Executing command: [{cleaned_cmd}]")
+        # current_env, env_pkgs = get_conda_env_info()
+        # logger.debug(f"Current conda environment: {current_env}, env_pkgs: {env_pkgs}")  # officebench
+        
+        exit_code, output = self.container.exec_run(
+            cleaned_cmd,
+            workdir=self.workdir
+        )
+        
+        # current_env, env_pkgs = get_conda_env_info()
+        # logger.debug(f"Current conda environment: {current_env}, env_pkgs: {env_pkgs}")  # officebench
+
+        # logger.debug(f"Command output[exit_code={exit_code}]: {output.decode('utf-8')}")
+
+        self.observation = output.decode("utf-8").split('OBSERVATION:')[-1].strip()
+        self.info[ACTION_EXEC] = exit_code == 0
 
     def exec_action(self, action_string: str) -> None:
         self.observation = None
@@ -143,19 +167,13 @@ class OfficeAgentEnv(IntercodeEnv):
                     self.observation = "Task failed"
                 command = None
             else:
-                action_module = apps.AVAILABLE_ACTIONS[action["app"]][action["action"]]
+                action_module = apps.AVAILABLE_ACTIONS[action["app"]][action["action"]]  # apps.email_app.email_list_emails
                 command = action_module.construct_action(self.workdir, args=action)
+                logger.debug(command)  
 
             if command is not None:
-                with timeout():
-                    cleaned_cmd = self.clean_cmd(command)
-                    self.logger.info(f"Executing command: [{cleaned_cmd}]")
-                    exit_code, output = self.container.exec_run(
-                        cleaned_cmd,
-                        workdir=self.workdir
-                    )
-                    self.observation = output.decode("utf-8").split('OBSERVATION:')[-1].strip()
-                    self.info[ACTION_EXEC] = exit_code == 0
+                # with timeout():  # utils.timeout class raises error in Windows OS, module 'signal' has no attribute 'SIGALRM'
+                self.exec_cmd(command)
 
                 if is_cd_flag and self.info[ACTION_EXEC]:
                     self.workdir = new_path
@@ -165,9 +183,9 @@ class OfficeAgentEnv(IntercodeEnv):
 
             self.history.append((action, self.observation))
         except Exception as e:
-            print('!!!!!!!!')
-            print(e)
-            print('!!!!!!!!')
+            logger.error('!!!!!!!!')
+            logger.error(e)
+            logger.error('!!!!!!!!')
             self.observation = "Malformed action! You must follow the given action format! Try a different action."
             self.info[ACTION_EXEC] = False
             self.history.append((action_string, self.observation))
@@ -250,14 +268,14 @@ class OfficeAgentEnv(IntercodeEnv):
         self.reward = reward 
         self.info.update(info)
 
-        self.logger.info(f"Info: {self.info}")
-        self.logger.info(f"Reward: {self.reward}")
+        logger.info(f"Info: {self.info}")
+        logger.info(f"Reward: {self.reward}")
         return reward, info
 
     def close(self):
-        self.logger.info("Beginning environment shutdown...")
+        logger.info("Beginning environment shutdown...")
         self.container.stop()
-        self.logger.info("Agent, evaluation containers stopped")
+        logger.info("Agent, evaluation containers stopped")
     
     ############################
     ### MARK: Helper methods ###
@@ -265,11 +283,16 @@ class OfficeAgentEnv(IntercodeEnv):
 
     def clean_cmd(self, action: str) -> str:
         """Cleans action string"""
+        # result = subprocess.run(["uname", "-a"], capture_output=True, text=True)
+        # if "win" in result.stdout.lower():
+        #     entrypoint = "//bin/bash"
+        # else:
         entrypoint = "/bin/bash" # IMAGE_TO_SETTINGS[self.image_name]
         # TODO: Fix the bracket problems
         # return f"{entrypoint} -c """{action.strip()}""""
         command = '{} -c """ {} """'.format(entrypoint, action.strip())
-        print('COMMAND:', command)
+
+        logger.info(f'container to run cmd: {command}')
         return command
 
     def parse_status(self, status: str) -> List:
@@ -297,3 +320,36 @@ class OfficeAgentEnv(IntercodeEnv):
                 path.append(segment)
 
         return "/" + "/".join(path)
+
+
+
+def get_conda_env_info():
+    # Get the name of the current Conda environment
+    try:
+        result = subprocess.run(['conda', 'info', '--envs'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if result.returncode == 0:
+            env_lines = result.stdout.splitlines()
+            for line in env_lines:
+                if '* ' in line:  # Find the line with the asterisk indicating the current environment
+                    current_env = line.strip().split('* ')[1]
+                    break
+        else:
+            logger.error(f"Error: {result.stderr}")
+            current_env = None
+    except Exception as e:
+        logger.error(f"An error occurred: {e}")
+        current_env = None
+    
+    # Get the list of installed packages in the current environment
+    try:
+        result = subprocess.run(['conda', 'list'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if result.returncode == 0:
+            package_list = result.stdout.splitlines()[2:]  # Skip the header lines
+        else:
+            logger.error(f"Error: {result.stderr}")
+            package_list = []
+    except Exception as e:
+        logger.error(f"An error occurred: {e}")
+        package_list = []
+
+    return current_env, package_list

@@ -1,7 +1,7 @@
 import os
 import fire
 import openpyxl
-
+from loguru import logger
 
 # DEMO = (
 #     'You can write text to a cell in the excel file by calling `excel_set_cell` with 5 arguments.\n'
@@ -26,7 +26,7 @@ def construct_action(work_dir, args: dict, py_file_path='/apps/excel_app/excel_s
     text = str(args["text"])
     if text == 'None':
         text = '[None]'
-    return "python3 {} --file_path {} --text '''{}''' --row_idx {} --column_idx {}".format(
+    return "/venv/bin/python3 {} --file_path {} --text '''{}''' --row_idx {} --column_idx {}".format(
         py_file_path, args["file_path"], args["text"], args["row_idx"], args["column_idx"]
     )
 
@@ -61,7 +61,7 @@ def excel_set_cell(file_path, text, row_idx, column_idx, sheet_name=None):
         workbook.save(file_path)
         return True
     except Exception as e:
-        print(e)
+        logger.error(e)
         return False
     
 
@@ -69,7 +69,7 @@ def main(file_path, text, row_idx, column_idx, sheet_name=None):
     if not os.path.exists(file_path):
         return f"OBSERVATION: The file {file_path} does not exist. Failed to write to the file."
     
-    print('!!! args:', file_path, text, row_idx, column_idx, sheet_name)
+    logger.info(f'!!! args: {file_path}, {text}, {row_idx}, {column_idx}, {sheet_name}')
 
     success = excel_set_cell(file_path, text, row_idx, column_idx, sheet_name)
     if success:

@@ -8,7 +8,7 @@ DEMO = (
 )
 
 def construct_action(work_dir, args: dict, py_file_path='/apps/excel_app/excel_create_new_file.py'):
-    return f'python3 {py_file_path} --file_path {args["file_path"]}'
+    return f'/venv/bin/python3 {py_file_path} --file_path {args["file_path"]}'
 
 
 def excel_create_new_file(file_path):

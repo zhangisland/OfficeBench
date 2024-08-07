@@ -18,7 +18,7 @@ DEMO = (
 
 def construct_action(work_dir, args: dict, py_file_path='/apps/pdf_app/image_convert_to_pdf.py'):
     # TODO: not sure if we need to specify the file path with the current workdir
-    return f'python3 {py_file_path} --image_file_path {args["image_file_path"]} --pdf_file_path {args["pdf_file_path"]}'
+    return f'/venv/bin/python3 {py_file_path} --image_file_path {args["image_file_path"]} --pdf_file_path {args["pdf_file_path"]}'
 
 
 def image_convert_to_pdf(image_file_path, pdf_file_path):

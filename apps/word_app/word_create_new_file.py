@@ -17,7 +17,7 @@ DEMO = (
 
 def construct_action(work_dir, args: dict, py_file_path='/apps/word_app/word_create_new_file.py'):
     # TODO: not sure if we need to specify the file path with the current workdir
-    return f'python3 {py_file_path} --file_path {args["file_path"]}'
+    return f'/venv/bin/python3 {py_file_path} --file_path {args["file_path"]}'
 
 def word_create_new_file(file_path):
     try:

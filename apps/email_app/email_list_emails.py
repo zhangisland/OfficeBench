@@ -1,6 +1,7 @@
 import fire
 import os
 from glob import glob
+from loguru import logger
 from email import policy
 from email.parser import BytesParser
 
@@ -10,7 +11,7 @@ DEMO = (
 )
 
 def construct_action(word_dir, args: dict, py_file_path='/apps/email_app/email_list_emails.py'):
-    return f'python3 {py_file_path} --username {args["username"]}'
+    return f'/venv/bin/python3 {py_file_path} --username {args["username"]}'
 
 
 def get_email_content(msg):
@@ -26,7 +27,7 @@ def get_email_content(msg):
         return msg.get_payload(decode=True).decode(msg.get_content_charset(), errors="replace")
 
 
-def list_emails(username, testbed_dir='/testbed', first_n_letters=20):
+def list_emails(username, testbed_dir='/testbed', first_n_letters=-1):
     """
     List emails for a given username.
     """
@@ -52,6 +53,7 @@ def list_emails(username, testbed_dir='/testbed', first_n_letters=20):
             else:
                 message += f'Content: {get_email_content(email)}\n'
             message += '-'*50 + '\n'
+        # logger.debug(f'Listed {len(emails)} emails for {username}: \n{message}')
         if not message:
             message = 'No emails found.'
         return message

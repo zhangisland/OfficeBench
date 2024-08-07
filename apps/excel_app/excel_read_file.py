@@ -5,7 +5,7 @@
 import os
 import fire
 import openpyxl
-
+from loguru import logger
 
 # DEMO = (
 #     'You can write text to a cell in the excel file by calling `excel_read_file` with 2 arguments.\n'
@@ -21,7 +21,7 @@ DEMO = (
 
 def construct_action(work_dir, args: dict, py_file_path='/apps/excel_app/excel_read_file.py'):
     # TODO: not sure if we need to specify the file path with the current workdir
-    return f'python3 {py_file_path} --file_path {args["file_path"]}'
+    return f'/venv/bin/python3 {py_file_path} --file_path {args["file_path"]}'
 
 
 def excel_read_file(file_path, sheet=None):
@@ -55,7 +55,7 @@ def main(file_path, sheet=None, debug=False):
 
     contents = excel_read_file(file_path, sheet)
     if debug:
-        print(contents)
+        logger.debug(contents)
     observation = wrap(contents)
     return observation
 

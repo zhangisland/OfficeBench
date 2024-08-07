@@ -2,6 +2,7 @@ from intercode.envs import (
     BashEnv, IntercodeEnv, AGENT_OBS, REWARD
 )
 from typing import Dict, Tuple
+from loguru import logger
 
 class CTFEnv(BashEnv):
     """Gym environment for CTF game"""
@@ -22,17 +23,17 @@ class CTFEnv(BashEnv):
         self.info[AGENT_OBS] = flag
         self.info[REWARD] = self.reward
 
-        self.logger.info(f"Info: {self.info}")
-        self.logger.info(f"Reward: {self.reward}")
+        logger.info(f"Info: {self.info}")
+        logger.info(f"Reward: {self.reward}")
         return self.reward, self.info
     
     def close(self):
-        self.logger.info("Beginning environment shutdown...")
+        logger.info("Beginning environment shutdown...")
         self.container.stop()
-        self.logger.info("Agent container stopped")
+        logger.info("Agent container stopped")
     
     def clean_cmd(self, action: str) -> str:
-        if any([action.strip().startswith(x) for x in ["python3 -c", "python -c"]]):
+        if any([action.strip().startswith(x) for x in ["/venv/bin/python3 -c", "python -c"]]):
             return action
         def clean_command(command):
             # Escape single quotes and enclose the command in single quotes

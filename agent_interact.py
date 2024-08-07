@@ -8,8 +8,20 @@ import pytz
 from utils.helper import build_docker
 from utils.env import OfficeAgentEnv
 from utils.policies import LLMPolicy
+from loguru import logger
+
+LOG_DIR = os.path.join(os.getcwd(), 'logs')
+if not os.path.exists(LOG_DIR):
+    os.makedirs(LOG_DIR)
+import time
+timestr = time.strftime("%Y%m%d-%H%M%S")
+logger.add(os.path.join(LOG_DIR, f'agent_interact_{timestr}.log'), rotation='100 MB')
 
 from intercode.envs.ic_env import ACTION_EXEC
+
+os.environ['http_proxy'] = 'http://127.0.0.1:7890'  # for Gemini API
+os.environ['https_proxy'] = 'http://127.0.0.1:7890'
+os.environ['all_proxy'] = 'socks5://127.0.0.1:7890'
 
 def main(docker_name='officebench',
          container_name='officebench-debug',
@@ -52,11 +64,11 @@ def main(docker_name='officebench',
         llm_cache = None
 
     if os.path.exists(output_dir) and not force_new and not use_llm_cache:
-        print(f"Output directory already exists: {output_dir}")
+        logger.info(f"Output directory already exists: {output_dir}")
         return
     
     if os.path.exists(output_dir) and force_new:
-        print(f"Force new mode: removing existing output directory: {output_dir}")
+        logger.info(f"Force new mode: removing existing output directory: {output_dir}")
         shutil.rmtree(output_dir)
 
     env = OfficeAgentEnv(image_name=docker_name, 
@@ -70,10 +82,13 @@ def main(docker_name='officebench',
     )
     env.cache_docker_status(local_cache_dir=f'{task_dir}/cache/{subtask_id}/')
 
+
     if 'gpt' in model_name:
         api_key = open('openai_key.txt').read().strip()
     elif 'gemini' in model_name:
         api_key = open('gemini_key.txt').read().strip()
+    elif 'qwen' in model_name:
+        api_key = open('qwen_key.txt').read().strip()
     else:
         api_key = ""
 
@@ -92,12 +107,13 @@ def main(docker_name='officebench',
         while not done:
             n_iter += 1
             action = policy.forward(env)
+            logger.info(action)
             obs, reward, done, info = env.step(action)
             if n_iter >= max_iter:
-                print(f"Max iterations reached: {max_iter}")
+                logger.warning(f"Max iterations reached: {max_iter}")
                 break
     except KeyboardInterrupt:
-        print("Exiting InterCode environment...")
+        logger.info("Exiting InterCode environment...")
     
     os.makedirs(output_dir, exist_ok=True)
     env.cache_docker_status(local_cache_dir=output_dir)
