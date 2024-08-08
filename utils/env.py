@@ -115,7 +115,7 @@ class OfficeAgentEnv(IntercodeEnv):
     # @timeout(10, use_signals=False, exception_message="Timeout: Command execution timed out")
     def exec_cmd(self, command):
         cleaned_cmd = self.clean_cmd(command)
-        logger.info(f"Executing command: [{cleaned_cmd}]")
+        # logger.info(f"Executing command: [{cleaned_cmd}]")
         # current_env, env_pkgs = get_conda_env_info()
         # logger.debug(f"Current conda environment: {current_env}, env_pkgs: {env_pkgs}")  # officebench
         

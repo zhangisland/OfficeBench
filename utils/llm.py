@@ -5,6 +5,8 @@ import numpy as np
 import google.generativeai as genai
 from loguru import logger
 import dashscope
+import random
+
 
 class ChatGPT:
     def __init__(self, model_name, key, system_message=None):
@@ -166,9 +168,14 @@ class Qwen:
         self.system_message = system_message
     
     def generate_model_options(self,
-                               temperature=0.2):
+                               temperature=0.8,
+                               seed=1234):
+        # generate random seed
+        seed = 1234 # random.randint(0, 1000000)
+        logger.debug(f"Random seed: {seed}")
         return dict(
             temperature=temperature,
+            seed=seed,
         )
 
     def generate(self, prompt, options=None):
@@ -185,7 +192,6 @@ class Qwen:
 
         response = dashscope.Generation.call(
             model=self.model_name,
-            seed=1234,  # default seed
             api_key=self.key,
             messages=messages,
             result_format='message',

@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 import fire
 import shutil
 from datetime import datetime
@@ -125,4 +126,7 @@ def main(docker_name='officebench',
     env.close()
 
 if __name__ == '__main__':
+    # record the command line arguments and run the main function
+
+    logger.info(f"Command line arguments: {' '.join(sys.argv)}")
     fire.Fire(main)
